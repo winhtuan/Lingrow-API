@@ -1,0 +1,13 @@
+@Plantpedia.Api_HostAddress = http://localhost:5021
+@contentType = application/json
+
+###
+# Test API đăng nhập
+POST {{Plantpedia.Api_HostAddress}}/api/auth/login
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+
+{
+  "usernameOrEmail": "minha",
+  "password": "123456"
+}

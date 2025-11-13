@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lingrow.Api", "Lingrow.Api\Lingrow.Api.csproj", "{BEE9295D-5ECB-46D4-A5D0-9D5B1C5A202B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lingrow.Object", "Lingrow.Object\Lingrow.Object.csproj", "{0128B0E2-24B6-4681-A5F9-6FAFB4FA397C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lingrow.DataAccessLayer", "Lingrow.DataAccessLayer\Lingrow.DataAccessLayer.csproj", "{B9D14F41-CAAA-479A-A2F0-5FF54885012A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lingrow.BusinessLogicLayer", "Lingrow.BusinessLogicLayer\Lingrow.BusinessLogicLayer.csproj", "{88674D4D-5120-4527-96C9-91DA2BBF5D1A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BEE9295D-5ECB-46D4-A5D0-9D5B1C5A202B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEE9295D-5ECB-46D4-A5D0-9D5B1C5A202B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEE9295D-5ECB-46D4-A5D0-9D5B1C5A202B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEE9295D-5ECB-46D4-A5D0-9D5B1C5A202B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0128B0E2-24B6-4681-A5F9-6FAFB4FA397C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0128B0E2-24B6-4681-A5F9-6FAFB4FA397C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0128B0E2-24B6-4681-A5F9-6FAFB4FA397C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0128B0E2-24B6-4681-A5F9-6FAFB4FA397C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9D14F41-CAAA-479A-A2F0-5FF54885012A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9D14F41-CAAA-479A-A2F0-5FF54885012A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9D14F41-CAAA-479A-A2F0-5FF54885012A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9D14F41-CAAA-479A-A2F0-5FF54885012A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88674D4D-5120-4527-96C9-91DA2BBF5D1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88674D4D-5120-4527-96C9-91DA2BBF5D1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88674D4D-5120-4527-96C9-91DA2BBF5D1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88674D4D-5120-4527-96C9-91DA2BBF5D1A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
