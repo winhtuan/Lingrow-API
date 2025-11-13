@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Plantpedia.DataAccessLayer.Data;
+using Lingrow.DataAccessLayer.Data;
 
 #nullable disable
 
-namespace Plantpedia.DataAccessLayer.Migrations
+namespace Lingrow.DataAccessLayer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20251106154001_InitialCreate")]
@@ -26,7 +26,7 @@ namespace Plantpedia.DataAccessLayer.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Plantpedia.Models.UserAccount", b =>
+            modelBuilder.Entity("Lingrow.Models.UserAccount", b =>
                 {
                     b.Property<long>("UserId")
                         .ValueGeneratedOnAdd()
@@ -99,7 +99,7 @@ namespace Plantpedia.DataAccessLayer.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Plantpedia.Models.UserLoginData", b =>
+            modelBuilder.Entity("Lingrow.Models.UserLoginData", b =>
                 {
                     b.Property<long>("UserId")
                         .HasColumnType("bigint")
@@ -263,11 +263,11 @@ namespace Plantpedia.DataAccessLayer.Migrations
                     b.ToTable("user_activity", (string)null);
                 });
 
-            modelBuilder.Entity("Plantpedia.Models.UserLoginData", b =>
+            modelBuilder.Entity("Lingrow.Models.UserLoginData", b =>
                 {
-                    b.HasOne("Plantpedia.Models.UserAccount", "User")
+                    b.HasOne("Lingrow.Models.UserAccount", "User")
                         .WithOne("LoginData")
-                        .HasForeignKey("Plantpedia.Models.UserLoginData", "UserId")
+                        .HasForeignKey("Lingrow.Models.UserLoginData", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -276,7 +276,7 @@ namespace Plantpedia.DataAccessLayer.Migrations
 
             modelBuilder.Entity("UserActivity", b =>
                 {
-                    b.HasOne("Plantpedia.Models.UserAccount", "User")
+                    b.HasOne("Lingrow.Models.UserAccount", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -285,7 +285,7 @@ namespace Plantpedia.DataAccessLayer.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Plantpedia.Models.UserAccount", b =>
+            modelBuilder.Entity("Lingrow.Models.UserAccount", b =>
                 {
                     b.Navigation("LoginData")
                         .IsRequired();

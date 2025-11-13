@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Plantpedia.Enum;
+using Lingrow.Enum;
 
-namespace Plantpedia.Models;
+namespace Lingrow.Models;
 
 [Table("user_login_data")]
 public class UserLoginData

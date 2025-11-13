@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Plantpedia.BusinessLogicLayer.Helper
+namespace Lingrow.BusinessLogicLayer.Helper
 {
     public static class LoggerHelper
     {

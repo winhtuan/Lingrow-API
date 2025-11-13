@@ -1,7 +1,7 @@
+using Lingrow.Models;
 using Microsoft.EntityFrameworkCore;
-using Plantpedia.Models;
 
-namespace Plantpedia.DataAccessLayer.Data;
+namespace Lingrow.DataAccessLayer.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> o) : DbContext(o)
 {

@@ -1,8 +1,9 @@
+using Lingrow.BusinessLogicLayer.DTOs;
+using Lingrow.BusinessLogicLayer.Interface;
+using Lingrow.Enum;
 using Microsoft.AspNetCore.Mvc;
-using Plantpedia.BusinessLogicLayer.Interface;
-using Plantpedia.Object.DTOs;
 
-namespace Plantpedia.Api.Controllers;
+namespace Lingrow.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -10,7 +11,10 @@ public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
 
-    public AuthController(IUserService userService) => _userService = userService;
+    public AuthController(IUserService userService)
+    {
+        _userService = userService;
+    }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] AuthDtos.LoginRequest req)
@@ -18,32 +22,71 @@ public class AuthController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        try
+        // lấy metadata để sau này log activity
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var ua = Request.Headers.UserAgent.ToString();
+        var correlationId = HttpContext.TraceIdentifier;
+
+        var result = await _userService.LoginAsync(
+            req.UsernameOrEmail,
+            req.Password,
+            ip,
+            ua,
+            correlationId
+        );
+
+        if (!result.Succeeded)
         {
-            var user = await _userService.LoginAsync(req.UsernameOrEmail, req.Password);
+            return result.Status switch
+            {
+                LoginStatus.UserNotFound => NotFound(
+                    new { error = result.ErrorMessage ?? "User not found" }
+                ),
 
-            var dto = new AuthDtos.AuthUserDto(
-                UserId: user.UserId,
-                Username: user.LoginData.Username,
-                Email: user.LoginData.Email,
-                Role: user.LoginData.Role.ToString()
-            );
+                LoginStatus.InvalidPassword => Unauthorized(
+                    new { error = result.ErrorMessage ?? "Invalid credentials" }
+                ),
 
-            return Ok(new AuthDtos.LoginResponse(dto));
+                LoginStatus.LockedOut => StatusCode(
+                    StatusCodes.Status423Locked,
+                    new { error = result.ErrorMessage ?? "Account locked" }
+                ),
+
+                LoginStatus.Suspended => StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    new { error = result.ErrorMessage ?? "Account suspended" }
+                ),
+
+                LoginStatus.Deleted => StatusCode(
+                    StatusCodes.Status410Gone,
+                    new { error = result.ErrorMessage ?? "Account deleted" }
+                ),
+
+                LoginStatus.EmailNotConfirmed => StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    new { error = result.ErrorMessage ?? "Email not confirmed" }
+                ),
+
+                _ => BadRequest(new { error = result.ErrorMessage ?? "Login failed" }),
+            };
         }
-        catch (Exception ex)
-        {
-            // Phân loại nhanh theo nội dung Exception
-            if (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
-                return NotFound(new { error = "User not found" });
 
-            if (ex.Message.Contains("Invalid password", StringComparison.OrdinalIgnoreCase))
-                return Unauthorized(new { error = "Invalid credentials" });
+        // map AuthUser (domain) -> AuthUserDto (API)
+        var u = result.User!;
+        var userDto = new AuthDtos.AuthUserDto(
+            UserId: u.UserId,
+            Username: u.Username,
+            Email: u.Email,
+            Role: u.Role
+        );
 
-            if (ex.Message.Contains("locked", StringComparison.OrdinalIgnoreCase))
-                return StatusCode(StatusCodes.Status423Locked, new { error = ex.Message });
+        // TODO: sau này generate JWT ở đây
+        // var token = _jwtService.GenerateToken(u);
 
-            return Problem(title: "Login failed", detail: ex.Message, statusCode: 400);
-        }
+        var response = new AuthDtos.LoginResponse(
+            userDto /*, token */
+        );
+
+        return Ok(response);
     }
 }

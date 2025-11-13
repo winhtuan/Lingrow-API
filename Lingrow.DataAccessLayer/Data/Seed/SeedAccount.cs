@@ -1,9 +1,9 @@
-// Plantpedia.DataAccessLayer/Data/Seed/SeedAccount.cs
+// Lingrow.DataAccessLayer/Data/Seed/SeedAccount.cs
+using Lingrow.Enum;
+using Lingrow.Models;
 using Microsoft.EntityFrameworkCore;
-using Plantpedia.Enum;
-using Plantpedia.Models;
 
-namespace Plantpedia.DataAccessLayer.Data.Seed;
+namespace Lingrow.DataAccessLayer.Data.Seed;
 
 public static class SeedAccount
 {

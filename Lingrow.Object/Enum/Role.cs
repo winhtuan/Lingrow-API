@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Plantpedia.Enum;
+namespace Lingrow.Enum;
 
 public enum Role
 {

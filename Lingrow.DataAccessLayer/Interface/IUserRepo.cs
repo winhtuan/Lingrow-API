@@ -1,6 +1,6 @@
-using Plantpedia.Models;
+using Lingrow.Models;
 
-namespace Plantpedia.DataAccessLayer.Interface;
+namespace Lingrow.DataAccessLayer.Interface;
 
 public interface IUserRepo
 {

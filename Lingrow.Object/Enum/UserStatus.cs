@@ -1,4 +1,4 @@
-namespace Plantpedia.Enum
+namespace Lingrow.Enum
 {
     public enum UserStatus
     {

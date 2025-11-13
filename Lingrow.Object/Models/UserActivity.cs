@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using Plantpedia.Enum;
-using Plantpedia.Models;
+using Lingrow.Enum;
+using Lingrow.Models;
 
 [Table("user_activity")]
 public class UserActivity

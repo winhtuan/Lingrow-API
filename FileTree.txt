@@ -1,0 +1,60 @@
+File Tree: LingrowSolution
+Root path: e:\Lingrow-Project\LingrowSolution
+
+────────────────────────────────────────────────────────────────────────────────
+
+├── Lingrow.Api/
+│   ├── Controllers/
+│   │   └── AuthController.cs
+│   ├── Properties/
+│   │   └── launchSettings.json
+│   ├── Lingrow.Api.csproj
+│   ├── Lingrow.Api.http
+│   ├── Program.cs
+│   └── appsettings.Development.json
+├── Lingrow.BusinessLogicLayer/
+│   ├── Helper/
+│   │   ├── AuthHelper.cs
+│   │   ├── LoggerHelper.cs
+│   │   ├── PasswordHelper.cs
+│   │   └── UserHelper.cs
+│   ├── Interface/
+│   │   └── IUserService.cs
+│   ├── Services/
+│   │   └── UserService.cs
+│   └── Lingrow.BusinessLogicLayer.csproj
+├── Lingrow.DataAccessLayer/
+│   ├── Data/
+│   │   ├── Seed/
+│   │   │   └── SeedAccount.cs
+│   │   └── AppDbContext.cs
+│   ├── Interface/
+│   │   └── IUserRepo.cs
+│   ├── Migrations/
+│   │   ├── 20251106154001_InitialCreate.Designer.cs
+│   │   ├── 20251106154001_InitialCreate.cs
+│   │   └── AppDbContextModelSnapshot.cs
+│   ├── Repository/
+│   │   └── UserRepo.cs
+│   ├── Lingrow.DataAccessLayer.csproj
+│   └── code-first.md
+├── Lingrow.Object/
+│   ├── DTOs/
+│   │   └── AuthDtos.cs
+│   ├── Enum/
+│   │   ├── Role.cs
+│   │   └── UserStatus.cs
+│   ├── Models/
+│   │   ├── UserAccount.cs
+│   │   ├── UserActivity.cs
+│   │   └── UserLoginData.cs
+│   └── Lingrow.Object.csproj
+├── .dockerignore
+├── .gitignore
+├── Dockerfile
+├── Lingrow.sln
+├── docker-commad.md
+├── global.json
+└── nuget.md
+
+────────────────────────────────────────────────────────────────────────────────

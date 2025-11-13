@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
-namespace Plantpedia.BusinessLogicLayer.Helper;
+namespace Lingrow.BusinessLogicLayer.Helper;
 
 public static class PasswordHelper
 {

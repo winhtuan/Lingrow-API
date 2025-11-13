@@ -1,3 +1,3 @@
-namespace Plantpedia.BusinessLogicLayer.Helper;
+namespace Lingrow.BusinessLogicLayer.Helper;
 
 public class AuthHelper { }

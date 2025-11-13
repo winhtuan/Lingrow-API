@@ -1,4 +1,4 @@
-namespace Plantpedia.Object.DTOs;
+namespace Lingrow.BusinessLogicLayer.DTOs;
 
 public class AuthDtos
 {
@@ -6,5 +6,6 @@ public class AuthDtos
 
     public sealed record AuthUserDto(long UserId, string Username, string Email, string Role);
 
-    public sealed record LoginResponse(AuthUserDto User);
+    // thêm AccessToken để sau này gắn JWT
+    public sealed record LoginResponse(AuthUserDto User, string? AccessToken = null);
 }

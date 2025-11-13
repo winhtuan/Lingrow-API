@@ -1,7 +1,7 @@
+using Lingrow.DataAccessLayer.Data;
+using Lingrow.DataAccessLayer.Interface;
+using Lingrow.Models;
 using Microsoft.EntityFrameworkCore;
-using Plantpedia.DataAccessLayer.Data;
-using Plantpedia.DataAccessLayer.Interface;
-using Plantpedia.Models;
 
 public class UserRepo : IUserRepo
 {

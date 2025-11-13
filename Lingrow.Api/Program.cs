@@ -1,13 +1,22 @@
+using Lingrow.BusinessLogicLayer.Interface;
+using Lingrow.DataAccessLayer.Data;
+using Lingrow.DataAccessLayer.Interface;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using Plantpedia.BusinessLogicLayer.Interface;
-using Plantpedia.DataAccessLayer.Data;
-using Plantpedia.DataAccessLayer.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Kestrel listen trong container
-builder.WebHost.UseKestrel().UseUrls("http://0.0.0.0:5000");
+// Cấu hình port theo environment
+if (builder.Environment.IsDevelopment())
+{
+    // Local dev: chạy ở port 5189
+    builder.WebHost.UseUrls("http://localhost:5189");
+}
+else
+{
+    // Docker / production: listen mọi IP trong container ở port 5000
+    builder.WebHost.UseKestrel().UseUrls("http://0.0.0.0:5000");
+}
 
 var connStr =
     builder.Configuration.GetConnectionString("DefaultConnection")
