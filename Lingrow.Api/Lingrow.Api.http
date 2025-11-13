@@ -9,5 +9,5 @@ Accept: {{contentType}}
 
 {
   "usernameOrEmail": "minha",
-  "password": "123456"
+  "password": "12345"
 }

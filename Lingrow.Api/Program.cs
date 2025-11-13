@@ -1,4 +1,6 @@
+using Lingrow.BusinessLogicLayer.Auth;
 using Lingrow.BusinessLogicLayer.Interface;
+using Lingrow.BusinessLogicLayer.Options;
 using Lingrow.DataAccessLayer.Data;
 using Lingrow.DataAccessLayer.Interface;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -18,12 +20,15 @@ else
     builder.WebHost.UseKestrel().UseUrls("http://0.0.0.0:5000");
 }
 
-var connStr =
-    builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? builder.Configuration["ConnectionStrings:DefaultConnection"];
+var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// docker-pgadmin
-// "DefaultConnection": "Host=127.0.0.1;Port=5555;Database=AppDb;Username=rootuser;Password=strongpassword;Pooling=true;Ssl Mode=Disable;Trust Server Certificate=true"
+if (string.IsNullOrWhiteSpace(connStr))
+{
+    throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+}
+
+builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection("AuthOptions"));
+
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(connStr));
 
 // Logging

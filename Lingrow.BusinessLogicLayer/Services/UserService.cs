@@ -1,20 +1,20 @@
-using Lingrow.BusinessLogicLayer.Auth;
 using Lingrow.BusinessLogicLayer.Helper;
 using Lingrow.BusinessLogicLayer.Interface;
+using Lingrow.BusinessLogicLayer.Options;
 using Lingrow.DataAccessLayer.Interface;
-using Lingrow.Enum;
+using Microsoft.Extensions.Options;
 
-public class UserService : IUserService
+namespace Lingrow.BusinessLogicLayer.Auth;
+
+public partial class UserService : IUserService
 {
     private readonly IUserRepo _userRepo;
+    private readonly AuthOptions _options;
 
-    // config lockout – sau này có thể đưa vào appsettings + options pattern
-    private const int MaxFailedAccess = 5;
-    private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(5);
-
-    public UserService(IUserRepo userRepo)
+    public UserService(IUserRepo userRepo, IOptions<AuthOptions> options)
     {
         _userRepo = userRepo;
+        _options = options.Value;
     }
 
     public async Task<LoginResult> LoginAsync(
@@ -29,106 +29,42 @@ public class UserService : IUserService
 
         var ld = await _userRepo.GetUserLoginDataAsync(usernameOrEmail);
 
-        if (ld is null)
-        {
-            LoggerHelper.Warn($"User '{usernameOrEmail}' not found");
-            return new LoginResult(
-                Status: LoginStatus.UserNotFound,
-                ErrorMessage: "User not found"
-            );
-        }
+        // 1. Kiểm tra tồn tại user + navigation
+        var presenceError = ValidateUserPresence(ld, usernameOrEmail);
+        if (presenceError is not null)
+            return presenceError;
+
+        var loginData = ld!;
 
         LoggerHelper.Info(
-            $"Found user: {ld.Username}, email: {ld.Email}, role: {ld.Role}, userId: {ld.UserId}"
+            $"Found user: {loginData.Username}, email: {loginData.Email}, "
+                + $"role: {loginData.Role}, userId: {loginData.UserId}"
         );
 
-        // check user entity (status, soft-delete)
-        if (ld.User is null)
-        {
-            LoggerHelper.Warn($"User navigation not loaded for '{ld.Username}'");
-            return new LoginResult(
-                Status: LoginStatus.Deleted,
-                ErrorMessage: "User is no longer available"
-            );
-        }
+        // 2. Kiểm tra trạng thái user
+        var statusError = ValidateUserStatus(loginData);
+        if (statusError is not null)
+            return statusError;
 
-        if (ld.User.Status == UserStatus.Suspended)
-        {
-            LoggerHelper.Warn($"User '{ld.Username}' is suspended");
-            return new LoginResult(
-                Status: LoginStatus.Suspended,
-                ErrorMessage: "Account suspended"
-            );
-        }
+        // 3. Kiểm tra lockout
+        var lockoutError = ValidateLockout(loginData);
+        if (lockoutError is not null)
+            return lockoutError;
 
-        if (ld.User.Status == UserStatus.Deleted)
-        {
-            LoggerHelper.Warn($"User '{ld.Username}' is deleted");
-            return new LoginResult(Status: LoginStatus.Deleted, ErrorMessage: "Account deleted");
-        }
+        // 4. Verify password
+        var valid = PasswordHelper.VerifyPassword(
+            password,
+            loginData.PasswordHash,
+            loginData.PasswordSalt
+        );
 
-        // lockout
-        if (ld.LockoutEnd.HasValue && ld.LockoutEnd.Value > DateTime.UtcNow)
-        {
-            LoggerHelper.Warn($"Account '{ld.Username}' is locked until {ld.LockoutEnd.Value:u}");
-            return new LoginResult(
-                Status: LoginStatus.LockedOut,
-                ErrorMessage: "Account locked. Please try again later."
-            );
-        }
-
-        // verify password
-        var valid = PasswordHelper.VerifyPassword(password, ld.PasswordHash, ld.PasswordSalt);
         if (!valid)
-        {
-            ld.AccessFailedCount++;
-            LoggerHelper.Warn(
-                $"Invalid password for '{ld.Username}'. Failed attempts: {ld.AccessFailedCount}"
-            );
+            return await HandleInvalidPasswordAsync(loginData);
 
-            if (ld.AccessFailedCount >= MaxFailedAccess)
-            {
-                ld.LockoutEnd = DateTime.UtcNow + LockoutDuration;
-                ld.AccessFailedCount = 0;
-                LoggerHelper.Warn($"Account '{ld.Username}' locked until {ld.LockoutEnd.Value:u}");
-            }
+        // 5. Thành công
+        await OnPasswordVerifiedAsync(loginData);
 
-            await _userRepo.SaveChangesAsync();
-
-            return new LoginResult(
-                Status: LoginStatus.InvalidPassword,
-                ErrorMessage: "Invalid credentials"
-            );
-        }
-
-        // check email confirmed (nếu muốn bắt buộc)
-        // if (!ld.EmailConfirmed)
-        // {
-        //     LoggerHelper.Warn($"Email not confirmed for '{ld.Username}'");
-        //     return new LoginResult(
-        //         Status: LoginStatus.EmailNotConfirmed,
-        //         ErrorMessage: "Email not confirmed"
-        //     );
-        // }
-
-        // success: reset lockout + update last login
-        ld.AccessFailedCount = 0;
-        ld.LockoutEnd = null;
-        ld.LastLoginAt = DateTime.UtcNow;
-
-        await _userRepo.SaveChangesAsync();
-
-        LoggerHelper.Info($"Login successful for '{ld.Username}' at {ld.LastLoginAt:u}");
-
-        var authUser = new AuthUser(
-            UserId: ld.UserId,
-            Username: ld.Username,
-            Email: ld.Email,
-            Role: ld.Role.ToString()
-        );
-
-        // TODO: ở đây có thể log UserActivity nếu muốn, dùng ip/userAgent/correlationId
-
-        return new LoginResult(Status: LoginStatus.Success, User: authUser);
+        // 6. Build kết quả
+        return BuildSuccessResult(loginData);
     }
 }
