@@ -3,7 +3,7 @@
 
 ###
 # Test API đăng nhập
-POST {{Plantpedia.Api_HostAddress}}/api/auth/login
+POST {{Plantpedia.Api_HostAddress}}/api/auth/signin
 Content-Type: {{contentType}}
 Accept: {{contentType}}
 

@@ -9,6 +9,17 @@ public class UserRepo : IUserRepo
 
     public UserRepo(AppDbContext context) => _context = context;
 
+    public async Task AddUserAsync(UserAccount account, UserLoginData loginData)
+    {
+        // đảm bảo 1-1: set navigation
+        loginData.User = account;
+        await _context.UserAccounts.AddAsync(account);
+        await _context.UserLoginDatas.AddAsync(loginData);
+    }
+
+    public Task<bool> EmailExistsAsync(string email) =>
+        _context.UserLoginDatas.AnyAsync(u => u.Email == email);
+
     public Task<UserLoginData?> GetUserLoginDataAsync(string input)
     {
         if (string.IsNullOrWhiteSpace(input))

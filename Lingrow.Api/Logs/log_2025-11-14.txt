@@ -1,0 +1,2 @@
+﻿2025-11-14 13:24:26.731 [UserService.SignUp] [Info] : Signup request: email=user1@example.com, fullName=Nguyen Van A
+2025-11-14 13:24:27.077 [UserService.SignUp] [Info] : Signup success: email=user1@example.com, username=user1, userId=151d84f0-2561-411a-9123-4c4510a98d1d

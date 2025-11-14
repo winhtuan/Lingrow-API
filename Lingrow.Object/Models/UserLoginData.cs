@@ -9,7 +9,7 @@ public class UserLoginData
 {
     [Key]
     [Column("user_id")]
-    public long UserId { get; set; }
+    public Guid UserId { get; set; }
     public UserAccount User { get; set; } = default!;
 
     [Required, MaxLength(100)]

@@ -1,10 +1,14 @@
 using Lingrow.BusinessLogicLayer.Auth;
+using Lingrow.BusinessLogicLayer.Helper;
 using Lingrow.BusinessLogicLayer.Interface;
 using Lingrow.BusinessLogicLayer.Options;
+using Lingrow.BusinessLogicLayer.Service.Auth;
 using Lingrow.DataAccessLayer.Data;
 using Lingrow.DataAccessLayer.Interface;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,12 +41,59 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
+// ===== JWT + Cognito config =====
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var authority = jwtSection["Authority"];
+var audience = jwtSection["Audience"];
+
+builder
+    .Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        // Cognito issuer
+        options.Authority = authority;
+        options.Audience = audience;
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = authority,
+
+            ValidateAudience = true,
+            ValidAudience = audience,
+
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(2), // cho phép lệch thời gian nhẹ
+        };
+
+        // Optional: log lỗi token
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = ctx =>
+            {
+                Console.WriteLine($"JWT auth failed: {ctx.Exception.Message}");
+                return Task.CompletedTask;
+            },
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// ================================
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IUserService, UserService>();
+
+// Khởi tạo logger: Logs sẽ nằm trong {ContentRoot}/Logs
+LoggerHelper.Configure(builder.Environment.ContentRootPath);
 
 var app = builder.Build();
 
@@ -70,12 +121,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Nếu chạy sau Nginx (HTTP nội bộ), bạn có thể TẮT HTTPS redirection:
+// Nếu chạy sau Nginx (HTTP nội bộ), có thể tắt HTTPS redirection
 #if !DEBUG
 // app.UseHttpsRedirection(); // Nginx handle TLS
 #endif
 
+// ===== Thứ tự middleware auth =====
+app.UseAuthentication();
 app.UseAuthorization();
+
+// ================================
 
 app.MapControllers();
 
@@ -89,7 +144,3 @@ app.MapGet(
 );
 
 app.Run();
-
-// "ConnectionStrings": {
-//     "DefaultConnection": "Host=localhost;Port=5432;Database=Lingrow;Username=postgres;Password=root"
-//   },

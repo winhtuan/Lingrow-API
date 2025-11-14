@@ -12,7 +12,7 @@ public class UserActivity
     public long ActivityId { get; set; }
 
     [Required, Column("user_id")]
-    public long UserId { get; set; }
+    public Guid UserId { get; set; }
     public UserAccount User { get; set; } = default!;
 
     [Required, Column("type")]

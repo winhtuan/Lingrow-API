@@ -1,4 +1,5 @@
 // Lingrow.DataAccessLayer/Data/Seed/SeedAccount.cs
+using System;
 using Lingrow.Enum;
 using Lingrow.Models;
 using Microsoft.EntityFrameworkCore;
@@ -9,12 +10,16 @@ public static class SeedAccount
 {
     public static void Apply(ModelBuilder modelBuilder)
     {
+        // Dùng GUID cố định cho data seed
+        var user1Id = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var user2Id = Guid.Parse("22222222-2222-2222-2222-222222222222");
+
         modelBuilder
             .Entity<UserAccount>()
             .HasData(
                 new UserAccount
                 {
-                    UserId = 1L,
+                    UserId = user1Id,
                     FullName = "Nguyen Minh A",
                     Gender = 'M',
                     DateOfBirth = new DateOnly(2004, 6, 21),
@@ -25,7 +30,7 @@ public static class SeedAccount
                 },
                 new UserAccount
                 {
-                    UserId = 2L,
+                    UserId = user2Id,
                     FullName = "Nguyen Minh B",
                     Gender = 'M',
                     DateOfBirth = new DateOnly(2004, 6, 21),
@@ -41,7 +46,7 @@ public static class SeedAccount
             .HasData(
                 new UserLoginData
                 {
-                    UserId = 1L,
+                    UserId = user1Id, // phải trùng với UserAccount
                     Username = "minha",
                     Email = "winhtuan.dev@gmail.com",
                     Role = Role.admin,
@@ -56,7 +61,7 @@ public static class SeedAccount
                 },
                 new UserLoginData
                 {
-                    UserId = 2L,
+                    UserId = user2Id,
                     Username = "minhb",
                     Email = "winhtuan@gmail.com",
                     Role = Role.user,

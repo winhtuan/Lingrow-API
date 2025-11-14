@@ -1,8 +1,9 @@
+using Lingrow.BusinessLogicLayer.Auth;
 using Lingrow.BusinessLogicLayer.Helper;
 using Lingrow.Enum;
 using Lingrow.Models;
 
-namespace Lingrow.BusinessLogicLayer.Auth;
+namespace Lingrow.BusinessLogicLayer.Service.Auth;
 
 public partial class UserService
 {
@@ -19,7 +20,6 @@ public partial class UserService
             ld.AccessFailedCount = 0;
         }
 
-        // dùng field _userRepo, không phải interface IUserRepo
         await _userRepo.SaveChangesAsync();
 
         return new LoginResult(

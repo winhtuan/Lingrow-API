@@ -2,11 +2,11 @@
 
 ```bash
 
-dotnet add .\Plantpedia.DataAccessLayer package Microsoft.EntityFrameworkCore --version 8.*
-dotnet add .\Plantpedia.DataAccessLayer package Npgsql.EntityFrameworkCore.PostgreSQL --version 8.*
-dotnet add .\Plantpedia.DataAccessLayer package Microsoft.EntityFrameworkCore.Tools --version 8.*
-dotnet add .\Plantpedia.DataAccessLayer package Microsoft.EntityFrameworkCore.Design --version 8.*
-dotnet add .\Plantpedia.Api package Microsoft.EntityFrameworkCore.Design --version 8.*
+dotnet add .\Plantpedia.DataAccessLayer package Microsoft.EntityFrameworkCore --version 8.0.21
+dotnet add .\Plantpedia.DataAccessLayer package Npgsql.EntityFrameworkCore.PostgreSQL --version 8.0.8
+dotnet add .\Plantpedia.DataAccessLayer package Microsoft.EntityFrameworkCore.Tools --version 8.0.21
+dotnet add .\Plantpedia.DataAccessLayer package Microsoft.EntityFrameworkCore.Design --version 8.0.21
+dotnet add .\Plantpedia.Api package Microsoft.EntityFrameworkCore.Design --version 8.0.21
 
 ```
 

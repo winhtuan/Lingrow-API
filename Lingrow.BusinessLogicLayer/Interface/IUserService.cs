@@ -12,4 +12,11 @@ public interface IUserService
         string? userAgent = null,
         string? correlationId = null
     );
+
+    Task<UserAccount> SignUpAsync(
+        string email,
+        string fullName,
+        DateOnly dateOfBirth,
+        string password
+    );
 }
