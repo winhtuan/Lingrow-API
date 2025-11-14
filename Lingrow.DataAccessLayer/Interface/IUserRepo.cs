@@ -4,8 +4,13 @@ namespace Lingrow.DataAccessLayer.Interface;
 
 public interface IUserRepo
 {
-    Task<UserLoginData?> GetUserLoginDataAsync(string input);
+    Task<UserAccount?> GetUserAsync(string input);
+
+    Task<UserAccount?> GetByCognitoSubAsync(string cognitoSub);
+
     Task<bool> EmailExistsAsync(string email);
-    Task AddUserAsync(UserAccount account, UserLoginData loginData);
+
+    Task AddUserAsync(UserAccount user);
+
     Task<int> SaveChangesAsync();
 }

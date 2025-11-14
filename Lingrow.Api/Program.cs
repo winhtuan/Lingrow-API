@@ -1,10 +1,11 @@
-using Lingrow.BusinessLogicLayer.Auth;
+using Amazon.S3;
 using Lingrow.BusinessLogicLayer.Helper;
 using Lingrow.BusinessLogicLayer.Interface;
 using Lingrow.BusinessLogicLayer.Options;
 using Lingrow.BusinessLogicLayer.Service.Auth;
 using Lingrow.DataAccessLayer.Data;
 using Lingrow.DataAccessLayer.Interface;
+using Lingrow.DataAccessLayer.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -89,12 +90,23 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// ================================
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IUserService, UserService>();
+
+// ================================
+builder.Services.Configure<AwsOptions>(builder.Configuration.GetSection("Aws"));
+
+// Đăng ký AWS SDK integration
+builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+builder.Services.AddAWSService<IAmazonS3>();
+
+builder.Services.AddSingleton<S3Helper>();
 
 // Khởi tạo logger: Logs sẽ nằm trong {ContentRoot}/Logs
 LoggerHelper.Configure(builder.Environment.ContentRootPath);
 
+// ================================
 var app = builder.Build();
 
 // Forwarded headers từ Nginx

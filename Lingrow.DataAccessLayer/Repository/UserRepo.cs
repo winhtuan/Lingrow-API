@@ -3,35 +3,58 @@ using Lingrow.DataAccessLayer.Interface;
 using Lingrow.Models;
 using Microsoft.EntityFrameworkCore;
 
+namespace Lingrow.DataAccessLayer.Repository;
+
 public class UserRepo : IUserRepo
 {
     private readonly AppDbContext _context;
 
-    public UserRepo(AppDbContext context) => _context = context;
-
-    public async Task AddUserAsync(UserAccount account, UserLoginData loginData)
+    public UserRepo(AppDbContext context)
     {
-        // đảm bảo 1-1: set navigation
-        loginData.User = account;
-        await _context.UserAccounts.AddAsync(account);
-        await _context.UserLoginDatas.AddAsync(loginData);
+        _context = context;
     }
 
-    public Task<bool> EmailExistsAsync(string email) =>
-        _context.UserLoginDatas.AnyAsync(u => u.Email == email);
-
-    public Task<UserLoginData?> GetUserLoginDataAsync(string input)
+    /// <summary>
+    /// Lấy user bằng username hoặc email.
+    /// </summary>
+    public async Task<UserAccount?> GetUserAsync(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
             throw new ArgumentException("Input cannot be null or empty.", nameof(input));
 
-        // cần tracking để set LastLoginAt, AccessFailedCount
-        var query = _context.UserLoginDatas.Include(u => u.User).AsTracking();
-
         return input.Contains('@')
-            ? query.FirstOrDefaultAsync(u => u.Email == input)
-            : query.FirstOrDefaultAsync(u => u.Username == input);
+            ? await _context.UserAccounts.FirstOrDefaultAsync(u => u.Email == input)
+            : await _context.UserAccounts.FirstOrDefaultAsync(u => u.Username == input);
     }
 
+    /// <summary>
+    /// Lấy user theo CognitoSub (sub trong JWT token)
+    /// </summary>
+    public Task<UserAccount?> GetByCognitoSubAsync(string cognitoSub)
+    {
+        return _context
+            .UserAccounts.AsTracking()
+            .FirstOrDefaultAsync(u => u.CognitoSub == cognitoSub);
+    }
+
+    /// <summary>
+    /// Kiểm tra email đã tồn tại hay chưa
+    /// </summary>
+    public Task<bool> EmailExistsAsync(string email)
+    {
+        return _context.UserAccounts.AnyAsync(u => u.Email == email);
+    }
+
+    /// <summary>
+    /// Thêm user mới (khi user lần đầu đăng nhập qua Cognito)
+    /// </summary>
+    public async Task AddUserAsync(UserAccount user)
+    {
+        await _context.UserAccounts.AddAsync(user);
+    }
+
+    /// <summary>
+    /// Lưu thay đổi database
+    /// </summary>
     public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
 }

@@ -5,18 +5,18 @@ namespace Lingrow.BusinessLogicLayer.Interface;
 
 public interface IUserService
 {
-    Task<LoginResult> LoginAsync(
-        string usernameOrEmail,
-        string password,
-        string? ip = null,
-        string? userAgent = null,
-        string? correlationId = null
+    /// <summary>
+    /// Đồng bộ thông tin người dùng từ Cognito
+    /// </summary>
+    Task<UserAccount> SyncCognitoUserAsync(
+        string cognitoSub,
+        string email,
+        string? username = null,
+        string? fullName = null
     );
 
-    Task<UserAccount> SignUpAsync(
-        string email,
-        string fullName,
-        DateOnly dateOfBirth,
-        string password
-    );
+    /// <summary>
+    /// Lấy thông tin user theo CognitoSub
+    /// </summary>
+    Task<UserAccount?> GetByCognitoSubAsync(string cognitoSub);
 }
