@@ -1,4 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
 using Amazon.S3;
+using Lingrow.Api.Auth;
 using Lingrow.BusinessLogicLayer.Helper;
 using Lingrow.BusinessLogicLayer.Interface;
 using Lingrow.BusinessLogicLayer.Options;
@@ -6,6 +8,7 @@ using Lingrow.BusinessLogicLayer.Service.Auth;
 using Lingrow.DataAccessLayer.Data;
 using Lingrow.DataAccessLayer.Interface;
 using Lingrow.DataAccessLayer.Repository;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -43,48 +46,42 @@ builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 // ===== JWT + Cognito config =====
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var authority = jwtSection["Authority"];
-var audience = jwtSection["Audience"];
+var cognitoSection = builder.Configuration.GetSection("Cognito");
+var authority = cognitoSection["Authority"];
+var audience = cognitoSection["Audience"];
+
+if (string.IsNullOrWhiteSpace(authority) || string.IsNullOrWhiteSpace(audience))
+{
+    throw new InvalidOperationException("Cognito Authority/Audience are not configured.");
+}
 
 builder
     .Services.AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme = "Cognito";
+        options.DefaultChallengeScheme = "Cognito";
     })
-    .AddJwtBearer(options =>
-    {
-        // Cognito issuer
-        options.Authority = authority;
-        options.Audience = audience;
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = authority,
-
-            ValidateAudience = true,
-            ValidAudience = audience,
-
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(2), // cho phép lệch thời gian nhẹ
-        };
-
-        // Optional: log lỗi token
-        options.Events = new JwtBearerEvents
-        {
-            OnAuthenticationFailed = ctx =>
-            {
-                Console.WriteLine($"JWT auth failed: {ctx.Exception.Message}");
-                return Task.CompletedTask;
-            },
-        };
-    });
+    .AddScheme<AuthenticationSchemeOptions, CognitoJwtHandler>("Cognito", options => { });
 
 builder.Services.AddAuthorization();
 
 // ================================
+
+// ===== CORS Configuration =====
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        "AllowFrontend",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:3000", "http://localhost:3001")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
+    );
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -103,7 +100,7 @@ builder.Services.AddAWSService<IAmazonS3>();
 
 builder.Services.AddSingleton<S3Helper>();
 
-// Khởi tạo logger: Logs sẽ nằm trong {ContentRoot}/Logs
+// Khởi tạo logger
 LoggerHelper.Configure(builder.Environment.ContentRootPath);
 
 // ================================
@@ -133,12 +130,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Nếu chạy sau Nginx (HTTP nội bộ), có thể tắt HTTPS redirection
-#if !DEBUG
 // app.UseHttpsRedirection(); // Nginx handle TLS
-#endif
 
-// ===== Thứ tự middleware auth =====
+// ===== CORS =====
+app.UseCors("AllowFrontend");
+
+// ===== Middleware auth =====
 app.UseAuthentication();
 app.UseAuthorization();
 

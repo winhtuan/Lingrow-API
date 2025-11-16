@@ -12,7 +12,8 @@ public interface IUserService
         string cognitoSub,
         string email,
         string? username = null,
-        string? fullName = null
+        string? fullName = null,
+        DateOnly? birthdate = null
     );
 
     /// <summary>

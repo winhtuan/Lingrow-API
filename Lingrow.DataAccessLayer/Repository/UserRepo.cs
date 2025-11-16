@@ -15,19 +15,6 @@ public class UserRepo : IUserRepo
     }
 
     /// <summary>
-    /// Lấy user bằng username hoặc email.
-    /// </summary>
-    public async Task<UserAccount?> GetUserAsync(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input))
-            throw new ArgumentException("Input cannot be null or empty.", nameof(input));
-
-        return input.Contains('@')
-            ? await _context.UserAccounts.FirstOrDefaultAsync(u => u.Email == input)
-            : await _context.UserAccounts.FirstOrDefaultAsync(u => u.Username == input);
-    }
-
-    /// <summary>
     /// Lấy user theo CognitoSub (sub trong JWT token)
     /// </summary>
     public Task<UserAccount?> GetByCognitoSubAsync(string cognitoSub)
@@ -40,9 +27,9 @@ public class UserRepo : IUserRepo
     /// <summary>
     /// Kiểm tra email đã tồn tại hay chưa
     /// </summary>
-    public Task<bool> EmailExistsAsync(string email)
+    public async Task<UserAccount?> GetByEmailAsync(string email)
     {
-        return _context.UserAccounts.AnyAsync(u => u.Email == email);
+        return await _context.UserAccounts.FirstOrDefaultAsync(u => u.Email == email);
     }
 
     /// <summary>
@@ -56,5 +43,5 @@ public class UserRepo : IUserRepo
     /// <summary>
     /// Lưu thay đổi database
     /// </summary>
-    public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
+    public Task SaveChangesAsync() => _context.SaveChangesAsync();
 }

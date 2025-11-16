@@ -26,14 +26,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> o) : DbContext(o)
         mb.Entity<UserActivity>(e =>
         {
             e.ToTable("user_activity").HasKey(x => x.ActivityId);
+
             e.HasOne(x => x.User)
-                .WithMany()
+                .WithMany() // hoặc .WithMany(u => u.Activities) nếu bạn thêm collection
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             e.Property(x => x.Type).HasConversion<string>();
             e.Property(x => x.CreatedAt).HasDefaultValueSql("now() at time zone 'utc'");
             e.HasIndex(x => new { x.UserId, x.CreatedAt });
+
+            // MATCH filter với UserAccount
+            e.HasQueryFilter(a => a.User.DeletedAt == null);
         });
 
         SeedData(mb);
