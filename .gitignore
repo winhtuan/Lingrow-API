@@ -2,7 +2,8 @@
 bin/
 obj/
 .vs/
-Log/
+**/Logs/
+*.log
 # ASP.NET Core settings
 appsettings.json
 appsettings.*.json

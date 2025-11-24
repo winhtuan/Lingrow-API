@@ -143,13 +143,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet(
-    "/db/ping",
-    async (AppDbContext db) =>
-    {
-        await db.Database.ExecuteSqlRawAsync("select 1;");
-        return Results.Ok("DB OK");
-    }
-);
-
 app.Run();

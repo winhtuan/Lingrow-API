@@ -26,6 +26,9 @@ RUN dotnet publish Lingrow.Api/Lingrow.Api.csproj -c Release -o /app/publish /p:
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
+# Cài wget cho healthcheck
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
 # Không đặt ASPNETCORE_URLS ở đây; để compose truyền (5000)
 EXPOSE 5000
 
