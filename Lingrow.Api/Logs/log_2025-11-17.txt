@@ -1,3 +1,0 @@
-﻿2025-11-17 09:57:04.032 [UserService] [Info] : Sync request: sub=396a653c-c001-7011-91b4-7c562e8068b0, email=de180116nguyenminhtuan@gmail.com, username=google_106531673369195776324, fullName=Tuấn Nguyễn Minh (DE180116), birthdate=
-2025-11-17 09:57:04.503 [UserService] [Info] : No existing user found. Creating new user...
-2025-11-17 09:57:04.796 [UserService] [Info] : New user created: 585c171d-af06-43f3-9978-2b244cca66ce
