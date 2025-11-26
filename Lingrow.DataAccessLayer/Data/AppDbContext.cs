@@ -56,9 +56,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> o) : DbContext(o)
             e.HasQueryFilter(a => a.User.DeletedAt == null);
         });
 
-        // ===========================
         // STUDENT CARD
-        // ===========================
         mb.Entity<StudentCard>(e =>
         {
             e.ToTable("student_cards").HasKey(x => x.Id);
@@ -76,11 +74,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> o) : DbContext(o)
                 .WithMany(u => u.StudentCardsAsStudent)
                 .HasForeignKey(x => x.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Soft delete + tránh principal bị filter mà dependent vẫn hiện
+            e.HasQueryFilter(c =>
+                !c.IsDeleted && c.Tutor!.DeletedAt == null && c.Student!.DeletedAt == null
+            );
         });
 
-        // ===========================
         // SCHEDULE
-        // ===========================
         mb.Entity<Schedule>(e =>
         {
             e.ToTable("schedules").HasKey(x => x.Id);
@@ -99,11 +100,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> o) : DbContext(o)
                 .HasForeignKey(s => s.TutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Lấy lịch theo tutor nhanh hơn
             e.HasIndex(x => new { x.TutorId, x.StartTime });
-
-            // Lấy lịch theo thẻ nhanh hơn
             e.HasIndex(x => new { x.StudentCardId, x.StartTime });
+
+            // Soft delete + đồng bộ với filter UserAccount
+            e.HasQueryFilter(s => !s.IsDeleted && s.Tutor!.DeletedAt == null);
         });
 
         // ===========================

@@ -26,9 +26,4 @@ public class Tutor : UserAccount
 
     [Column("hourly_rate")]
     public decimal HourlyRate { get; set; } = 0m;
-
-    // Navigation properties
-    public virtual ICollection<StudentCard>? ManagedStudentCards { get; set; }
-
-    public virtual ICollection<Schedule>? Schedules { get; set; }
 }
