@@ -11,24 +11,25 @@ public class UserAccount
     [Column("user_id")]
     public Guid UserId { get; set; } = Guid.NewGuid();
 
-    // Cognito user identifier ("sub" trong JWT)
+    // Cognito user identifier ("sub")
     [Required, MaxLength(64)]
     [Column("cognito_sub")]
     public string CognitoSub { get; set; } = default!;
 
-    // Email được xác thực bởi Cognito
+    // Email xác thực bởi Cognito
     [Required, MaxLength(200)]
     [EmailAddress]
     [Column("email")]
     public string Email { get; set; } = default!;
 
-    // Username (có thể khác email nếu bạn cho phép user đặt riêng)
+    // Username tuỳ chọn (non-nullable)
     [Required, MaxLength(100)]
     [Column("username")]
     public string Username { get; set; } = default!;
 
-    [Required, Column("role")]
-    public Role Role { get; set; } = Role.user;
+    [Required]
+    [Column("role")]
+    public Role Role { get; set; } = Role.student;
 
     // Thông tin cá nhân
     [MaxLength(255)]
@@ -45,7 +46,8 @@ public class UserAccount
     public string? AvatarUrl { get; set; }
 
     // Trạng thái tài khoản
-    [Required, Column("status")]
+    [Required]
+    [Column("status")]
     public UserStatus Status { get; set; } = UserStatus.Active;
 
     [Column("email_confirmed")]
@@ -55,7 +57,8 @@ public class UserAccount
     public DateTime? EmailConfirmedAt { get; set; }
 
     // Metadata
-    [Required, Column("created_at", TypeName = "timestamptz")]
+    [Required]
+    [Column("created_at", TypeName = "timestamptz")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [Column("updated_at", TypeName = "timestamptz")]
@@ -66,4 +69,9 @@ public class UserAccount
 
     [Column("deleted_at", TypeName = "timestamptz")]
     public DateTime? DeletedAt { get; set; }
+
+    // Navigation: luôn nullable hoặc khởi tạo list
+    public virtual ICollection<StudentCard>? StudentCardsAsStudent { get; set; }
+    public virtual ICollection<StudentCard>? StudentCardsAsTutor { get; set; }
+    public virtual ICollection<Schedule>? SchedulesAsTutor { get; set; }
 }
