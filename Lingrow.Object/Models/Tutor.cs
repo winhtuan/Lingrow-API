@@ -23,7 +23,4 @@ public class Tutor : UserAccount
     [MaxLength(100)]
     [Column("languages")] // Ví dụ: "English, Vietnamese"
     public string? Languages { get; set; }
-
-    [Column("hourly_rate")]
-    public decimal HourlyRate { get; set; } = 0m;
 }
