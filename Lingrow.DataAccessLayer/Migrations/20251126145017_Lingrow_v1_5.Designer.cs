@@ -4,6 +4,7 @@ using System.Text.Json;
 using Lingrow.DataAccessLayer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Lingrow.DataAccessLayer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251126145017_Lingrow_v1_5")]
+    partial class Lingrow_v1_5
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -137,7 +140,7 @@ namespace Lingrow.DataAccessLayer.Migrations
                         .HasColumnName("notes");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("text")
+                        .HasColumnType("jsonb")
                         .HasColumnName("tags");
 
                     b.Property<Guid>("TutorId")

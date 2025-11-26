@@ -5,14 +5,13 @@ using Lingrow.BusinessLogicLayer.Helper;
 using Lingrow.BusinessLogicLayer.Interface;
 using Lingrow.BusinessLogicLayer.Options;
 using Lingrow.BusinessLogicLayer.Service.Auth;
+using Lingrow.BusinessLogicLayer.Services.Schedules;
 using Lingrow.DataAccessLayer.Data;
 using Lingrow.DataAccessLayer.Interface;
 using Lingrow.DataAccessLayer.Repository;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,7 +88,12 @@ builder.Services.AddSwaggerGen();
 
 // ================================
 builder.Services.AddScoped<IUserRepo, UserRepo>();
+builder.Services.AddScoped<IStudentCardRepo, StudentCardRepo>();
+builder.Services.AddScoped<IScheduleRepo, ScheduleRepo>();
+
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IStudentCardService, StudentCardService>();
+builder.Services.AddScoped<IScheduleService, ScheduleService>();
 
 // ================================
 builder.Services.Configure<AwsOptions>(builder.Configuration.GetSection("Aws"));

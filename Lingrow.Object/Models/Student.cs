@@ -9,7 +9,7 @@ public class Student : UserAccount
     public Student()
     {
         // Dùng Role làm "discriminator" logic trong code
-        Role = Role.student;
+        Role = Role.user;
     }
 
     [Column("age")]

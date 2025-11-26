@@ -32,6 +32,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> o) : DbContext(o)
             e.HasQueryFilter(x => x.DeletedAt == null);
         });
 
+        mb.Entity<UserAccount>()
+            .HasDiscriminator<string>("Discriminator")
+            .HasValue<UserAccount>("UserAccount");
+
         // Student → kế thừa UserAccount
         mb.Entity<Student>().ToTable("user_account");
         mb.Entity<Tutor>().ToTable("user_account");
@@ -63,22 +67,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> o) : DbContext(o)
 
             e.Property(x => x.Color).HasMaxLength(50);
             e.Property(x => x.DisplayName).HasMaxLength(200);
-            e.Property(x => x.Tags).HasColumnType("jsonb");
+            e.Property(x => x.Tags).HasColumnType("text");
 
             e.HasOne(x => x.Tutor)
                 .WithMany(u => u.StudentCardsAsTutor)
                 .HasForeignKey(x => x.TutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            e.HasOne(x => x.Student)
-                .WithMany(u => u.StudentCardsAsStudent)
-                .HasForeignKey(x => x.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Soft delete + tránh principal bị filter mà dependent vẫn hiện
-            e.HasQueryFilter(c =>
-                !c.IsDeleted && c.Tutor!.DeletedAt == null && c.Student!.DeletedAt == null
-            );
+            e.HasQueryFilter(c => c.Tutor != null && c.Tutor.DeletedAt == null);
         });
 
         // SCHEDULE

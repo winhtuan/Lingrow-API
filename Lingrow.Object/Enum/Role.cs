@@ -5,7 +5,7 @@ namespace Lingrow.Enum;
 public enum Role
 {
     [Display(Name = "Học sinh")]
-    student,
+    user,
 
     [Display(Name = "Gia sư")]
     tutor,

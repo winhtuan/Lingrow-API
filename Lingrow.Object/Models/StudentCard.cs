@@ -12,11 +12,6 @@ public class StudentCard : BaseEntity
     public Guid TutorId { get; set; }
 
     [Required]
-    [Column("student_id")]
-    public Guid StudentId { get; set; }
-
-    // Bắt buộc => non-nullable + khởi tạo mặc định
-    [Required]
     [MaxLength(200)]
     [Column("display_name")]
     public string DisplayName { get; set; } = string.Empty;
@@ -39,9 +34,6 @@ public class StudentCard : BaseEntity
     // Navigation
     [ForeignKey("TutorId")]
     public virtual UserAccount? Tutor { get; set; }
-
-    [ForeignKey("StudentId")]
-    public virtual UserAccount? Student { get; set; }
 
     public virtual ICollection<Schedule>? Schedules { get; set; }
 }

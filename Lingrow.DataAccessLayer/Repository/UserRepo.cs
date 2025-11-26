@@ -15,6 +15,14 @@ public class UserRepo : IUserRepo
     }
 
     /// <summary>
+    /// Lấy user theo ID
+    /// </summary>
+    public Task<UserAccount?> GetByIdAsync(Guid id)
+    {
+        return _context.UserAccounts.FirstOrDefaultAsync(u => u.UserId == id);
+    }
+
+    /// <summary>
     /// Lấy user theo CognitoSub (sub trong JWT token)
     /// </summary>
     public Task<UserAccount?> GetByCognitoSubAsync(string cognitoSub)

@@ -1,11 +1,9 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Lingrow.BusinessLogicLayer.Helper;
+using Lingrow.DataAccessLayer.Interface;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Lingrow.Api.Auth
@@ -21,7 +19,7 @@ namespace Lingrow.Api.Auth
         )
             : base(options, logger, encoder, clock) { }
 
-        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             var authHeader = Request.Headers["Authorization"].ToString();
 
@@ -31,14 +29,14 @@ namespace Lingrow.Api.Auth
             )
             {
                 // Không có token => để [Authorize] xử lý 401
-                return Task.FromResult(AuthenticateResult.NoResult());
+                return AuthenticateResult.NoResult();
             }
 
             var token = authHeader.Substring("Bearer ".Length).Trim();
 
             if (string.IsNullOrWhiteSpace(token))
             {
-                return Task.FromResult(AuthenticateResult.NoResult());
+                return AuthenticateResult.NoResult();
             }
 
             try
@@ -46,25 +44,24 @@ namespace Lingrow.Api.Auth
                 var handler = new JwtSecurityTokenHandler();
                 var jwt = handler.ReadJwtToken(token);
 
-                // Parse claims manually from payload JSON because JwtSecurityTokenHandler
-                // doesn't parse all claims correctly (especially those with colons like cognito:username)
                 var claims = new List<Claim>();
+
+                // parse payload thủ công (giữ đúng như code anh đang có)
                 try
                 {
                     var parts = token.Split('.');
                     if (parts.Length >= 2)
                     {
                         var payload = parts[1];
-                        // Add padding if needed
                         var padding = payload.Length % 4;
                         if (padding > 0)
                         {
                             payload += new string('=', 4 - padding);
                         }
+
                         var payloadBytes = Convert.FromBase64String(payload);
                         var payloadJson = System.Text.Encoding.UTF8.GetString(payloadBytes);
 
-                        // Parse JSON and convert to claims
                         using var doc = System.Text.Json.JsonDocument.Parse(payloadJson);
                         foreach (var prop in doc.RootElement.EnumerateObject())
                         {
@@ -93,7 +90,7 @@ namespace Lingrow.Api.Auth
                     claims = [.. jwt.Claims];
                 }
 
-                // Lấy sub từ claims
+                // --- Lấy sub, email, token_use ---
                 var sub =
                     claims.FirstOrDefault(c => c.Type == "sub")?.Value
                     ?? jwt.Subject
@@ -103,13 +100,35 @@ namespace Lingrow.Api.Auth
                 var email = claims.FirstOrDefault(c => c.Type == "email")?.Value;
                 var tokenUse = claims.FirstOrDefault(c => c.Type == "token_use")?.Value;
 
-                // Thêm NameIdentifier claim nếu chưa có
+                // Thêm NameIdentifier nếu chưa có
                 if (
                     !string.IsNullOrEmpty(sub)
                     && !claims.Any(c => c.Type == ClaimTypes.NameIdentifier)
                 )
                 {
                     claims.Add(new Claim(ClaimTypes.NameIdentifier, sub));
+                }
+
+                // --- Tra DB lấy UserId và add claim user_id ---
+                if (!string.IsNullOrWhiteSpace(sub))
+                {
+                    try
+                    {
+                        var userRepo = Context.RequestServices.GetRequiredService<IUserRepo>();
+                        var user = await userRepo.GetByCognitoSubAsync(sub);
+                        if (user != null)
+                        {
+                            claims.Add(new Claim("user_id", user.UserId.ToString()));
+                        }
+                        else
+                        {
+                            LoggerHelper.Warn($"No UserAccount found for sub={sub}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerHelper.Error($"Failed to resolve user_id from sub: {ex.Message}");
+                    }
                 }
 
                 LoggerHelper.Info(
@@ -120,12 +139,12 @@ namespace Lingrow.Api.Auth
                 var principal = new ClaimsPrincipal(identity);
                 var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
-                return Task.FromResult(AuthenticateResult.Success(ticket));
+                return AuthenticateResult.Success(ticket);
             }
             catch (Exception ex)
             {
                 LoggerHelper.Error(ex);
-                return Task.FromResult(AuthenticateResult.Fail("Invalid JWT"));
+                return AuthenticateResult.Fail("Invalid JWT");
             }
         }
     }

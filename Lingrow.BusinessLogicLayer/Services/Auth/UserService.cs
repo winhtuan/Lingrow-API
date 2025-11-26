@@ -86,7 +86,7 @@ public class UserService : IUserService
                 Email = email,
                 Username = username ?? email.Split('@')[0],
                 FullName = fullName,
-                Role = Role.student,
+                Role = Role.user,
                 Status = UserStatus.Active,
                 EmailConfirmed = true,
                 CreatedAt = DateTime.UtcNow,

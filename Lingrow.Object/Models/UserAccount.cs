@@ -29,7 +29,7 @@ public class UserAccount
 
     [Required]
     [Column("role")]
-    public Role Role { get; set; } = Role.student;
+    public Role Role { get; set; } = Role.user;
 
     // Thông tin cá nhân
     [MaxLength(255)]

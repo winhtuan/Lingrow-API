@@ -1,4 +1,5 @@
 using Lingrow.BusinessLogicLayer.DTOs.Schedule;
+using Lingrow.BusinessLogicLayer.Helper;
 using Lingrow.BusinessLogicLayer.Interface;
 using Lingrow.BusinessLogicLayer.Mapping;
 using Lingrow.DataAccessLayer.Interface;
@@ -23,45 +24,54 @@ public class ScheduleService : IScheduleService
         CreateScheduleRequest request
     )
     {
-        // Validate thời gian
-        ScheduleValidation.EnsureValidTimeRange(request.StartTime, request.EndTime);
-
-        // Lấy student card
-        var card =
-            await _cardRepo.GetByIdAsync(request.StudentCardId)
-            ?? throw new KeyNotFoundException("StudentCard not found.");
-
-        // Check quyền tutor
-        if (card.TutorId != tutorId)
-            throw new InvalidOperationException(
-                "You do not have permission to schedule this student card."
-            );
-
-        // Check overlap (trùng giờ)
-        var overlap = await _scheduleRepo.HasOverlapAsync(
-            tutorId,
-            request.StartTime,
-            request.EndTime
+        LoggerHelper.Info(
+            $"CreateScheduleAsync called | tutorId={tutorId} | cardId={request.StudentCardId} | start={request.StartTime} | end={request.EndTime}"
         );
 
-        if (overlap)
-            throw new InvalidOperationException("Schedule overlaps with an existing session.");
-
-        // Create entity
-        var schedule = new Schedule
+        try
         {
-            TutorId = tutorId,
-            StudentCardId = card.Id,
-            Title = request.Title.Trim(),
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
-            Type = request.Type,
-            Status = ScheduleStatus.Scheduled,
-        };
+            ScheduleValidation.EnsureValidTimeRange(request.StartTime, request.EndTime);
 
-        await _scheduleRepo.AddAsync(schedule);
+            var card =
+                await _cardRepo.GetByIdAsync(request.StudentCardId)
+                ?? throw new KeyNotFoundException("StudentCard not found.");
 
-        return schedule.ToResponse();
+            if (card.TutorId != tutorId)
+                throw new InvalidOperationException(
+                    "You do not have permission to schedule this student card."
+                );
+
+            var overlap = await _scheduleRepo.HasOverlapAsync(
+                tutorId,
+                request.StartTime,
+                request.EndTime
+            );
+
+            if (overlap)
+                throw new InvalidOperationException("Schedule overlaps with an existing session.");
+
+            var schedule = new Schedule
+            {
+                TutorId = tutorId,
+                StudentCardId = card.Id,
+                Title = request.Title.Trim(),
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                Type = request.Type,
+                Status = ScheduleStatus.Scheduled,
+            };
+
+            await _scheduleRepo.AddAsync(schedule);
+
+            LoggerHelper.Info($"Create schedule success | scheduleId={schedule.Id}");
+
+            return schedule.ToResponse();
+        }
+        catch (Exception ex)
+        {
+            LoggerHelper.Error(ex);
+            throw;
+        }
     }
 
     public async Task<ScheduleResponse> UpdateScheduleAsync(
@@ -70,36 +80,60 @@ public class ScheduleService : IScheduleService
         UpdateScheduleRequest request
     )
     {
-        ScheduleValidation.EnsureValidTimeRange(request.StartTime, request.EndTime);
+        LoggerHelper.Info($"UpdateScheduleAsync called | tutorId={tutorId} | scheduleId={id}");
 
-        var schedule =
-            await _scheduleRepo.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException("Schedule not found.");
+        try
+        {
+            ScheduleValidation.EnsureValidTimeRange(request.StartTime, request.EndTime);
 
-        if (schedule.TutorId != tutorId)
-            throw new InvalidOperationException("Unauthorized update attempt.");
+            var schedule =
+                await _scheduleRepo.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("Schedule not found.");
 
-        schedule.Title = request.Title.Trim();
-        schedule.StartTime = request.StartTime;
-        schedule.EndTime = request.EndTime;
-        schedule.Type = request.Type;
+            if (schedule.TutorId != tutorId)
+                throw new InvalidOperationException("Unauthorized update attempt.");
 
-        await _scheduleRepo.UpdateAsync(schedule);
+            schedule.Title = request.Title.Trim();
+            schedule.StartTime = request.StartTime;
+            schedule.EndTime = request.EndTime;
+            schedule.Type = request.Type;
 
-        return schedule.ToResponse();
+            await _scheduleRepo.UpdateAsync(schedule);
+
+            LoggerHelper.Info($"Update schedule success | scheduleId={schedule.Id}");
+
+            return schedule.ToResponse();
+        }
+        catch (Exception ex)
+        {
+            LoggerHelper.Error(ex);
+            throw;
+        }
     }
 
     public async Task<bool> DeleteScheduleAsync(Guid tutorId, Guid id)
     {
-        var schedule =
-            await _scheduleRepo.GetByIdAsync(id)
-            ?? throw new KeyNotFoundException("Schedule not found.");
+        LoggerHelper.Info($"DeleteScheduleAsync called | tutorId={tutorId} | scheduleId={id}");
 
-        if (schedule.TutorId != tutorId)
-            throw new InvalidOperationException("Unauthorized delete attempt.");
+        try
+        {
+            var schedule =
+                await _scheduleRepo.GetByIdAsync(id)
+                ?? throw new KeyNotFoundException("Schedule not found.");
 
-        await _scheduleRepo.DeleteAsync(schedule);
+            if (schedule.TutorId != tutorId)
+                throw new InvalidOperationException("Unauthorized delete attempt.");
 
-        return true;
+            await _scheduleRepo.DeleteAsync(schedule);
+
+            LoggerHelper.Info($"Delete schedule success | scheduleId={id}");
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            LoggerHelper.Error(ex);
+            throw;
+        }
     }
 }
