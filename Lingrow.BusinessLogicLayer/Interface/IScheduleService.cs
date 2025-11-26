@@ -1,13 +1,14 @@
-using Lingrow.BusinessLogicLayer.DTOs;
-using Lingrow.Models;
+using Lingrow.BusinessLogicLayer.DTOs.Schedule;
 
 namespace Lingrow.BusinessLogicLayer.Interface;
 
 public interface IScheduleService
 {
-    Task<Schedule> CreateScheduleAsync(
+    Task<ScheduleResponse> CreateScheduleAsync(Guid tutorId, CreateScheduleRequest request);
+    Task<ScheduleResponse> UpdateScheduleAsync(
         Guid tutorId,
-        CreateScheduleRequest request,
-        CancellationToken cancellationToken = default
+        Guid scheduleId,
+        UpdateScheduleRequest request
     );
+    Task<bool> DeleteScheduleAsync(Guid tutorId, Guid scheduleId);
 }

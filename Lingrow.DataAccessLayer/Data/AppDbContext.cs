@@ -7,39 +7,108 @@ public class AppDbContext(DbContextOptions<AppDbContext> o) : DbContext(o)
 {
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
     public DbSet<UserActivity> UserActivities => Set<UserActivity>();
+    public DbSet<StudentCard> StudentCards => Set<StudentCard>();
+    public DbSet<Schedule> Schedules => Set<Schedule>();
+    public DbSet<Student> Students => Set<Student>();
+    public DbSet<Tutor> Tutors => Set<Tutor>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
-        // UserAccount
+        // ===========================
+        // USERACCOUNT (TPH)
+        // ===========================
         mb.Entity<UserAccount>(e =>
         {
             e.ToTable("user_account").HasKey(x => x.UserId);
+
             e.Property(x => x.Status).HasConversion<string>();
             e.Property(x => x.Role).HasConversion<string>();
+
             e.Property(x => x.CreatedAt).HasDefaultValueSql("now() at time zone 'utc'");
+
             e.HasIndex(x => x.Email).IsUnique();
             e.HasIndex(x => x.CognitoSub).IsUnique();
-            e.HasQueryFilter(x => x.DeletedAt == null); // soft delete
+
+            e.HasQueryFilter(x => x.DeletedAt == null);
         });
 
-        // UserActivity (n–1)
+        // Student → kế thừa UserAccount
+        mb.Entity<Student>().ToTable("user_account");
+        mb.Entity<Tutor>().ToTable("user_account");
+
+        // ===========================
+        // USER ACTIVITY
+        // ===========================
         mb.Entity<UserActivity>(e =>
         {
             e.ToTable("user_activity").HasKey(x => x.ActivityId);
 
             e.HasOne(x => x.User)
-                .WithMany() // hoặc .WithMany(u => u.Activities) nếu bạn thêm collection
+                .WithMany()
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             e.Property(x => x.Type).HasConversion<string>();
             e.Property(x => x.CreatedAt).HasDefaultValueSql("now() at time zone 'utc'");
+
             e.HasIndex(x => new { x.UserId, x.CreatedAt });
 
-            // MATCH filter với UserAccount
             e.HasQueryFilter(a => a.User.DeletedAt == null);
         });
 
+        // ===========================
+        // STUDENT CARD
+        // ===========================
+        mb.Entity<StudentCard>(e =>
+        {
+            e.ToTable("student_cards").HasKey(x => x.Id);
+
+            e.Property(x => x.Color).HasMaxLength(50);
+            e.Property(x => x.DisplayName).HasMaxLength(200);
+            e.Property(x => x.Tags).HasColumnType("jsonb");
+
+            e.HasOne(x => x.Tutor)
+                .WithMany(u => u.StudentCardsAsTutor)
+                .HasForeignKey(x => x.TutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.Student)
+                .WithMany(u => u.StudentCardsAsStudent)
+                .HasForeignKey(x => x.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ===========================
+        // SCHEDULE
+        // ===========================
+        mb.Entity<Schedule>(e =>
+        {
+            e.ToTable("schedules").HasKey(x => x.Id);
+
+            e.Property(x => x.Title).HasMaxLength(200);
+            e.Property(x => x.Status).HasConversion<string>();
+            e.Property(x => x.Type).HasConversion<string>();
+
+            e.HasOne(s => s.StudentCard)
+                .WithMany(c => c.Schedules)
+                .HasForeignKey(s => s.StudentCardId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(s => s.Tutor)
+                .WithMany(u => u.SchedulesAsTutor)
+                .HasForeignKey(s => s.TutorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Lấy lịch theo tutor nhanh hơn
+            e.HasIndex(x => new { x.TutorId, x.StartTime });
+
+            // Lấy lịch theo thẻ nhanh hơn
+            e.HasIndex(x => new { x.StudentCardId, x.StartTime });
+        });
+
+        // ===========================
+        // SEED DATA
+        // ===========================
         SeedData(mb);
     }
 

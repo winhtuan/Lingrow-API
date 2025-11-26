@@ -3,11 +3,8 @@ using Lingrow.Enum;
 
 namespace Lingrow.BusinessLogicLayer.DTOs.Schedule;
 
-public class CreateScheduleRequest
+public class UpdateScheduleRequest
 {
-    [Required]
-    public Guid StudentCardId { get; set; }
-
     [Required]
     [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
