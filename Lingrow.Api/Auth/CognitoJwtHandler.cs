@@ -4,6 +4,7 @@ using System.Security.Claims;
 using Lingrow.BusinessLogicLayer.Helper;
 using Lingrow.DataAccessLayer.Interface;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 namespace Lingrow.Api.Auth
@@ -46,7 +47,7 @@ namespace Lingrow.Api.Auth
 
                 var claims = new List<Claim>();
 
-                // parse payload thủ công (giữ đúng như code anh đang có)
+                // ================== GIỮ NGUYÊN ĐOẠN PARSE PAYLOAD THỦ CÔNG ==================
                 try
                 {
                     var parts = token.Split('.');
@@ -89,6 +90,7 @@ namespace Lingrow.Api.Auth
                     LoggerHelper.Warn($"Failed to parse JWT payload manually: {ex.Message}");
                     claims = [.. jwt.Claims];
                 }
+                // =========================================================================
 
                 // --- Lấy sub, email, token_use ---
                 var sub =
@@ -109,25 +111,59 @@ namespace Lingrow.Api.Auth
                     claims.Add(new Claim(ClaimTypes.NameIdentifier, sub));
                 }
 
-                // --- Tra DB lấy UserId và add claim user_id ---
+                // --- Tra DB lấy UserId và add claim user_id (CÓ CACHE) ---
                 if (!string.IsNullOrWhiteSpace(sub))
                 {
-                    try
+                    Guid? userId = null;
+                    var cacheKey = $"auth:user_id:{sub}";
+
+                    // lấy IMemoryCache từ DI (nếu có)
+                    var cache = Context.RequestServices.GetService<IMemoryCache>();
+
+                    // 1) thử lấy từ cache
+                    if (cache != null && cache.TryGetValue<Guid?>(cacheKey, out var cachedUserId))
                     {
-                        var userRepo = Context.RequestServices.GetRequiredService<IUserRepo>();
-                        var user = await userRepo.GetByCognitoSubAsync(sub);
-                        if (user != null)
+                        userId = cachedUserId;
+                    }
+                    else
+                    {
+                        // 2) không có cache → query DB
+                        try
                         {
-                            claims.Add(new Claim("user_id", user.UserId.ToString()));
+                            var userRepo = Context.RequestServices.GetRequiredService<IUserRepo>();
+                            var user = await userRepo.GetByCognitoSubAsync(sub);
+                            if (user != null)
+                            {
+                                userId = user.UserId;
+                            }
+                            else
+                            {
+                                LoggerHelper.Warn($"No UserAccount found for sub={sub}");
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            LoggerHelper.Warn($"No UserAccount found for sub={sub}");
+                            LoggerHelper.Error($"Failed to resolve user_id from sub: {ex.Message}");
+                        }
+
+                        // 3) lưu vào cache (kể cả null) để đỡ query lại liên tục
+                        if (cache != null)
+                        {
+                            cache.Set(
+                                cacheKey,
+                                userId,
+                                new MemoryCacheEntryOptions
+                                {
+                                    SlidingExpiration = TimeSpan.FromMinutes(10),
+                                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1),
+                                }
+                            );
                         }
                     }
-                    catch (Exception ex)
+
+                    if (userId.HasValue)
                     {
-                        LoggerHelper.Error($"Failed to resolve user_id from sub: {ex.Message}");
+                        claims.Add(new Claim("user_id", userId.Value.ToString()));
                     }
                 }
 
@@ -144,7 +180,7 @@ namespace Lingrow.Api.Auth
             catch (Exception ex)
             {
                 LoggerHelper.Error(ex);
-                return AuthenticateResult.Fail("Invalid JWT");
+                return AuthenticateResult.Fail("Invalid Cognito token.");
             }
         }
     }

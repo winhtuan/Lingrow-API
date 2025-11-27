@@ -12,4 +12,5 @@ public class ScheduleResponse
     public DateTime EndTime { get; set; }
     public ScheduleType Type { get; set; }
     public ScheduleStatus Status { get; set; }
+    public bool IsPinned { get; set; }
 }

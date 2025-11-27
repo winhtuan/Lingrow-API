@@ -11,4 +11,6 @@ public interface IScheduleService
         UpdateScheduleRequest request
     );
     Task<bool> DeleteScheduleAsync(Guid tutorId, Guid scheduleId);
+    Task<List<ScheduleResponse>> GetWeekAsync(Guid tutorId, DateTime weekStart);
+    Task<ScheduleResponse> UnpinSeriesAsync(Guid tutorId, Guid scheduleId);
 }

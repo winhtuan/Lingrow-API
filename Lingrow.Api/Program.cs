@@ -64,6 +64,9 @@ builder
 
 builder.Services.AddAuthorization();
 
+// ===== Memory Cache cho JWT handler =====
+builder.Services.AddMemoryCache();
+
 // ================================
 
 // ===== CORS Configuration =====

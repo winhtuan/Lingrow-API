@@ -1,5 +1,6 @@
 // Lingrow.Api/Controllers/StudentCardsController.cs
 using Lingrow.Api.Extensions;
+using Lingrow.Api.Utils;
 using Lingrow.BusinessLogicLayer.DTOs.Schedule;
 using Lingrow.BusinessLogicLayer.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -31,7 +32,7 @@ public class StudentCardsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return HandleException(ex);
+            return ExceptionUtil.ToResult(this, ex);
         }
     }
 
@@ -46,25 +47,7 @@ public class StudentCardsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return HandleException(ex);
+            return ExceptionUtil.ToResult(this, ex);
         }
-    }
-
-    private IActionResult HandleException(Exception ex)
-    {
-        return ex switch
-        {
-            KeyNotFoundException => NotFound(new { message = ex.Message }),
-            InvalidOperationException => BadRequest(new { message = ex.Message }),
-            ArgumentException => BadRequest(new { message = ex.Message }),
-            UnauthorizedAccessException => StatusCode(
-                StatusCodes.Status401Unauthorized,
-                new { message = ex.Message }
-            ),
-            _ => StatusCode(
-                StatusCodes.Status500InternalServerError,
-                new { message = "An unexpected error occurred." }
-            ),
-        };
     }
 }

@@ -21,7 +21,6 @@ public class StudentCard : BaseEntity
     [Column("notes")]
     public string? Notes { get; set; }
 
-    // JSON => optional
     [Column("tags", TypeName = "jsonb")]
     public string? Tags { get; set; }
 

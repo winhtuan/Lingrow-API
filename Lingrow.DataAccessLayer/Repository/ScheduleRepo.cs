@@ -15,6 +15,65 @@ public class ScheduleRepo : IScheduleRepo
         _context = db;
     }
 
+    public async Task<int> DeletePinnedSeriesAsync(
+        Guid tutorId,
+        Guid studentCardId,
+        DateTime baseStartTimeUtc,
+        int months
+    )
+    {
+        // baseStartTimeUtc là StartTime của buổi mà bạn đang bỏ ghim (UTC)
+        var fromUtc = baseStartTimeUtc.AddDays(1); // sau buổi hiện tại
+        var toUtc = baseStartTimeUtc.AddMonths(months); // tới N tháng sau
+
+        var timeOfDay = baseStartTimeUtc.TimeOfDay; // 08:00, 09:00,...
+        return await _context
+            .Schedules.Where(s =>
+                s.TutorId == tutorId
+                && s.StudentCardId == studentCardId
+                && s.IsPinned
+                && !s.IsDeleted
+                && s.StartTime >= fromUtc
+                && s.StartTime <= toUtc
+                && s.StartTime.TimeOfDay == timeOfDay
+            )
+            .ExecuteDeleteAsync();
+    }
+
+    public async Task<List<Schedule>> GetByTutorInRangeAsync(
+        Guid tutorId,
+        DateTime from,
+        DateTime to
+    )
+    {
+        DateTime NormalizeToUtc(DateTime dt)
+        {
+            if (dt.Kind == DateTimeKind.Utc)
+                return dt;
+
+            if (dt.Kind == DateTimeKind.Unspecified)
+            {
+                var asUtc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                return asUtc;
+            }
+
+            return dt.ToUniversalTime();
+        }
+
+        var fromUtc = NormalizeToUtc(from);
+        var toUtc = NormalizeToUtc(to);
+
+        return await _context
+            .Schedules.Include(s => s.StudentCard)
+            .Where(s =>
+                s.TutorId == tutorId
+                && !s.IsDeleted
+                && s.StartTime >= fromUtc
+                && s.StartTime < toUtc
+            )
+            .ToListAsync();
+    }
+
     public Task<Schedule?> GetByIdAsync(Guid id) =>
         _context.Schedules.FirstOrDefaultAsync(x => x.Id == id);
 

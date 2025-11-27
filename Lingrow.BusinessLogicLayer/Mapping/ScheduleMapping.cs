@@ -17,6 +17,7 @@ public static class ScheduleMapping
             EndTime = s.EndTime,
             Type = s.Type,
             Status = s.Status,
+            IsPinned = s.IsPinned,
         };
     }
 }

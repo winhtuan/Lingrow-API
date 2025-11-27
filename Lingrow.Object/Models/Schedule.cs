@@ -36,6 +36,10 @@ public class Schedule : BaseEntity
     [Column("status")]
     public ScheduleStatus Status { get; set; } = ScheduleStatus.Scheduled;
 
+    [Required]
+    [Column("is_pinned")]
+    public bool IsPinned { get; set; } = false;
+
     [ForeignKey("TutorId")]
     public virtual UserAccount? Tutor { get; set; }
 

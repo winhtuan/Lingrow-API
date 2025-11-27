@@ -19,6 +19,61 @@ public class ScheduleService : IScheduleService
         _cardRepo = cardRepo;
     }
 
+    public async Task<ScheduleResponse> UnpinSeriesAsync(Guid tutorId, Guid scheduleId)
+    {
+        LoggerHelper.Info($"UnpinSeriesAsync | tutorId={tutorId} | scheduleId={scheduleId}");
+
+        var schedule =
+            await _scheduleRepo.GetByIdAsync(scheduleId)
+            ?? throw new KeyNotFoundException("Schedule not found.");
+
+        if (schedule.TutorId != tutorId)
+            throw new InvalidOperationException("Unauthorized unpin attempt.");
+
+        // 1) Bỏ ghim chính buổi này
+        schedule.IsPinned = false;
+        await _scheduleRepo.UpdateAsync(schedule);
+
+        // 2) Xoá tất cả buổi pinned cùng chuỗi (3 tháng sau đó)
+        await _scheduleRepo.DeletePinnedSeriesAsync(
+            tutorId,
+            schedule.StudentCardId,
+            schedule.StartTime, // đã là UTC vì bạn lưu timestamptz
+            months: 3
+        );
+
+        LoggerHelper.Info($"Unpin series success | baseScheduleId={schedule.Id}");
+
+        return schedule.ToResponse();
+    }
+
+    public async Task<List<ScheduleResponse>> GetWeekAsync(Guid tutorId, DateTime weekStart)
+    {
+        // Chuẩn hoá weekStart về UTC
+        DateTime NormalizeToUtc(DateTime dt)
+        {
+            if (dt.Kind == DateTimeKind.Utc)
+                return dt;
+
+            if (dt.Kind == DateTimeKind.Local)
+                return dt.ToUniversalTime();
+
+            // Unspecified -> coi như UTC (vì FE gửi ISO 8601 có "Z")
+            return DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+        }
+
+        var startUtc = NormalizeToUtc(weekStart);
+        var weekEndUtc = startUtc.AddDays(7);
+
+        LoggerHelper.Info(
+            $"GetWeekAsync | tutorId={tutorId}, weekStart={startUtc:o}, weekEnd={weekEndUtc:o}"
+        );
+
+        var list = await _scheduleRepo.GetByTutorInRangeAsync(tutorId, startUtc, weekEndUtc);
+
+        return list.Select(s => s.ToResponse()).ToList();
+    }
+
     public async Task<ScheduleResponse> CreateScheduleAsync(
         Guid tutorId,
         CreateScheduleRequest request
@@ -59,6 +114,7 @@ public class ScheduleService : IScheduleService
                 EndTime = request.EndTime,
                 Type = request.Type,
                 Status = ScheduleStatus.Scheduled,
+                IsPinned = request.IsPinned,
             };
 
             await _scheduleRepo.AddAsync(schedule);
@@ -97,6 +153,11 @@ public class ScheduleService : IScheduleService
             schedule.StartTime = request.StartTime;
             schedule.EndTime = request.EndTime;
             schedule.Type = request.Type;
+
+            if (request.IsPinned.HasValue)
+            {
+                schedule.IsPinned = request.IsPinned.Value;
+            }
 
             await _scheduleRepo.UpdateAsync(schedule);
 

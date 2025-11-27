@@ -26,7 +26,7 @@ dotnet ef migrations remove --project .\Lingrow.DataAccessLayer\Lingrow.DataAcce
 
 ```bash
 
-dotnet ef migrations add Lingrow_v1_8 --project .\Lingrow.DataAccessLayer\Lingrow.DataAccessLayer.csproj --startup-project .\Lingrow.Api\Lingrow.Api.csproj --output-dir Migrations
+dotnet ef migrations add Lingrow_v1_9 --project .\Lingrow.DataAccessLayer\Lingrow.DataAccessLayer.csproj --startup-project .\Lingrow.Api\Lingrow.Api.csproj --output-dir Migrations
 
 dotnet ef database update --project .\Lingrow.DataAccessLayer\Lingrow.DataAccessLayer.csproj --startup-project .\Lingrow.Api\Lingrow.Api.csproj
 

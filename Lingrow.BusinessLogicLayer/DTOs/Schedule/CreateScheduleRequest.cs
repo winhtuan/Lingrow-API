@@ -19,4 +19,5 @@ public class CreateScheduleRequest
     public DateTime EndTime { get; set; }
 
     public ScheduleType Type { get; set; } = ScheduleType.OneTime;
+    public bool IsPinned { get; set; } = false;
 }
