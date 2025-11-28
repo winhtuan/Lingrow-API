@@ -67,8 +67,6 @@ builder.Services.AddAuthorization();
 // ===== Memory Cache cho JWT handler =====
 builder.Services.AddMemoryCache();
 
-// ================================
-
 // ===== CORS Configuration =====
 builder.Services.AddCors(options =>
 {
@@ -90,10 +88,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // ================================
+// Repos
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IStudentCardRepo, StudentCardRepo>();
 builder.Services.AddScoped<IScheduleRepo, ScheduleRepo>();
 
+// Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IStudentCardService, StudentCardService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
@@ -107,13 +107,13 @@ builder.Services.AddAWSService<IAmazonS3>();
 
 builder.Services.AddSingleton<S3Helper>();
 
-// Khởi tạo logger
+// Khởi tạo logger helper
 LoggerHelper.Configure(builder.Environment.ContentRootPath);
 
 // ================================
 var app = builder.Build();
 
-// Forwarded headers từ Nginx
+// Forwarded headers từ Nginx / reverse proxy
 app.UseForwardedHeaders(
     new ForwardedHeadersOptions
     {
@@ -124,12 +124,57 @@ app.UseForwardedHeaders(
     }
 );
 
-// Auto-migrate (dev/CI)
+// ===== Auto-migrate với retry (quan trọng để tránh lỗi 500 lần đầu) =====
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var db = services.GetRequiredService<AppDbContext>();
+
+    const int maxRetries = 5;
+    var delay = TimeSpan.FromSeconds(5);
+
+    for (var attempt = 1; attempt <= maxRetries; attempt++)
+    {
+        try
+        {
+            logger.LogInformation(
+                "Applying database migrations (attempt {Attempt}/{MaxAttempts})...",
+                attempt,
+                maxRetries
+            );
+
+            db.Database.Migrate();
+
+            logger.LogInformation("Database migrations applied successfully.");
+            break; // thành công -> thoát vòng for
+        }
+        catch (Exception ex)
+        {
+            if (attempt == maxRetries)
+            {
+                logger.LogError(
+                    ex,
+                    "Failed to apply database migrations after {MaxAttempts} attempts. Application will stop.",
+                    maxRetries
+                );
+                throw; // cho container fail nhanh để Docker restart
+            }
+
+            logger.LogWarning(
+                ex,
+                "Database migration failed on attempt {Attempt}/{MaxAttempts}. Retrying in {DelaySeconds} seconds...",
+                attempt,
+                maxRetries,
+                delay.TotalSeconds
+            );
+
+            Thread.Sleep(delay);
+        }
+    }
 }
+
+// ===== End auto-migrate =====
 
 if (app.Environment.IsDevelopment())
 {
@@ -145,8 +190,6 @@ app.UseCors("AllowFrontend");
 // ===== Middleware auth =====
 app.UseAuthentication();
 app.UseAuthorization();
-
-// ================================
 
 app.MapControllers();
 
