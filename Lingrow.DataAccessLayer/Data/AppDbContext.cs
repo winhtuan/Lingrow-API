@@ -74,7 +74,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> o) : DbContext(o)
                 .HasForeignKey(x => x.TutorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            e.HasQueryFilter(c => c.Tutor != null && c.Tutor.DeletedAt == null);
+            // Loại bỏ query filter - sẽ filter ở application level nếu cần
+            // e.HasQueryFilter(c => EF.Property<DateTime?>(c.Tutor!, "DeletedAt") == null);
         });
 
         // SCHEDULE
@@ -99,8 +100,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> o) : DbContext(o)
             e.HasIndex(x => new { x.TutorId, x.StartTime });
             e.HasIndex(x => new { x.StudentCardId, x.StartTime });
 
-            // Soft delete + đồng bộ với filter UserAccount
-            e.HasQueryFilter(s => !s.IsDeleted && s.Tutor!.DeletedAt == null);
+            // Chỉ filter soft delete - đơn giản và an toàn
+            e.HasQueryFilter(s => !s.IsDeleted);
         });
 
         // ===========================

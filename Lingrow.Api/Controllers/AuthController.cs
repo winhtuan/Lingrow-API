@@ -20,7 +20,9 @@ public class AuthController : ControllerBase
 
     [Authorize]
     [HttpGet("me")]
-    public async Task<IActionResult> GetCurrentUser()
+    public async Task<IActionResult> GetCurrentUser(
+        [FromServices] Microsoft.Extensions.Caching.Memory.IMemoryCache cache
+    )
     {
         var sub =
             User.FindFirst("sub")?.Value
@@ -44,6 +46,10 @@ public class AuthController : ControllerBase
             fullName,
             birthdate
         );
+
+        // Invalidate cache để CognitoJwtHandler query lại và lấy user_id mới
+        var cacheKey = $"auth:user_id:{sub}";
+        cache.Remove(cacheKey);
 
         var dto = new AuthDtos.AuthUserDto(
             user.UserId,

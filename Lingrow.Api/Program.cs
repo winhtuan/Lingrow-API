@@ -144,7 +144,7 @@ using (var scope = app.Services.CreateScope())
                 maxRetries
             );
 
-            db.Database.Migrate();
+            await db.Database.MigrateAsync();
 
             logger.LogInformation("Database migrations applied successfully.");
             break; // thành công -> thoát vòng for
@@ -169,7 +169,7 @@ using (var scope = app.Services.CreateScope())
                 delay.TotalSeconds
             );
 
-            Thread.Sleep(delay);
+            await Task.Delay(delay);
         }
     }
 }

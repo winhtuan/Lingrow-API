@@ -38,9 +38,16 @@ public class ScheduleController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateScheduleRequest request)
     {
-        var tutorId = GetTutorId();
-        var result = await _service.CreateScheduleAsync(tutorId, request);
-        return Ok(result);
+        try
+        {
+            var tutorId = GetTutorId();
+            var result = await _service.CreateScheduleAsync(tutorId, request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return ExceptionUtil.ToResult(this, ex);
+        }
     }
 
     // POST api/schedules/{id}/unpin-series
@@ -62,22 +69,44 @@ public class ScheduleController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateScheduleRequest request)
     {
-        var tutorId = GetTutorId();
-        var result = await _service.UpdateScheduleAsync(tutorId, id, request);
-        return Ok(result);
+        try
+        {
+            var tutorId = GetTutorId();
+            var result = await _service.UpdateScheduleAsync(tutorId, id, request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return ExceptionUtil.ToResult(this, ex);
+        }
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var tutorId = GetTutorId();
-        var success = await _service.DeleteScheduleAsync(tutorId, id);
-        return Ok(new { deleted = success });
+        try
+        {
+            var tutorId = GetTutorId();
+            var success = await _service.DeleteScheduleAsync(tutorId, id);
+            return Ok(new { deleted = success });
+        }
+        catch (Exception ex)
+        {
+            return ExceptionUtil.ToResult(this, ex);
+        }
     }
 
     private Guid GetTutorId()
     {
-        var id = User.FindFirst("user_id")?.Value ?? throw new Exception("Missing user_id claim.");
+        var id = User.FindFirst("user_id")?.Value;
+
+        if (string.IsNullOrEmpty(id))
+        {
+            throw new UnauthorizedAccessException(
+                "User ID not found. Please ensure you are authenticated and your account is synced."
+            );
+        }
+
         return Guid.Parse(id);
     }
 }
